@@ -1,0 +1,10 @@
+{
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SeinopSys/Derpi-PostVotes.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^5.8.0"
+  }
+}
