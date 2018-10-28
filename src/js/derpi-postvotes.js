@@ -110,14 +110,18 @@
 
 			console.info(`${LOG_PREFIX}Found %d new elements to hook into`, comms.length);
 
-			const commsArray = Array.from(comms);
+			const commsArray = [];
 			const entities = {};
-			commsArray.forEach(comm => {
+			Array.from(comms).forEach(comm => {
 				comm.classList.add(PROCESSED_CLASS_NAME);
+				if (!/^(comment|post)_\d+$/.test(comm.id))
+					return;
+
 				const [type, id] = comm.id.split('_');
 				if (entities[type] === undefined)
 					entities[type] = [];
 				entities[type].push(id);
+				commsArray.push(comm);
 			});
 			this.client.emit('get-scores', { entities }, data => {
 				commsArray.forEach(comm => {
