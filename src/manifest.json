@@ -1,11 +1,12 @@
 {
 	"name": "Derpi-PostVotes",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"description": "Vote on comments and forum posts on Derpibooru",
 	"permissions": [
 		"https://derpibooru.org/",
 		"https://www.derpibooru.org/",
-		"https://trixiebooru.org/"
+		"https://trixiebooru.org/",
+		"storage"
 	],
 	"content_scripts": [
 		{
