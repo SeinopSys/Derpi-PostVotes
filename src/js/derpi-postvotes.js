@@ -2,7 +2,9 @@
 
 	"use strict";
 
-	const DEV_MODE = !('update_url' in chrome.runtime.getManifest());
+	const MANIFEST = chrome.runtime.getManifest();
+	const DEV_MODE = !('update_url' in MANIFEST);
+	const VERSION = MANIFEST.version;
 	const LOG_PREFIX = '[Derpi-PostVotes] ';
 	const PROCESSED_CLASS_NAME = 'dpv-processed';
 	const INSERTED_CLASS_NAME = 'dpv-inserted';
@@ -73,7 +75,7 @@
 
 				this.client = io(connstr, { reconnectionDelay: 10000 });
 				this.client.on('connect', () => {
-					console.info(`${LOG_PREFIX}%cConnected to voting server`, 'color:green');
+					console.info(`${LOG_PREFIX}%cExtension v%s: Connected to voting server`, 'color:green', VERSION);
 
 					this.client.emit('auth', { apiKey });
 				});
@@ -89,8 +91,8 @@
 						return;
 					}
 
-					this.user = data.user;
-					console.info(`${LOG_PREFIX}%cServer v%s: Authenticated as %s`, 'color:green', data.version, this.user.name);
+					this.userId = data.userId;
+					console.info(`${LOG_PREFIX}%cServer v%s: Authenticated as user %s`, 'color:green', data.version, this.userId);
 					this.pollElements();
 					this.hookTimer = setInterval(() => this.pollElements(), 3000);
 				});
@@ -103,7 +105,7 @@
 					});
 					Object.keys(data.userVotes).forEach(commId => {
 						const userVote = data.userVotes[commId];
-						if (userVote.userId !== this.user.id)
+						if (userVote.userId !== this.userId)
 							return;
 
 						['up', 'down'].forEach(direction => {
@@ -118,7 +120,7 @@
 					});
 				});
 				this.client.on('vote-limit-reached', data => {
-					console.info(`${LOG_PREFIX}%cVote rate limit reached, votes cannot be cast by user %d for the next %d seconds`, 'color:#a55', this.user.id, data.allowVotingIn);
+					console.info(`${LOG_PREFIX}%cVote rate limit reached, votes cannot be cast by user %d for the next %d seconds`, 'color:#a55', this.userId, data.allowVotingIn);
 					extensionStorage.setItem(this.getLimitKey(), new Date().getTime() + (data.allowVotingIn * 1000));
 					this.setLimitTimer();
 				});
@@ -291,7 +293,7 @@
 		}
 
 		getLimitKey() {
-			return `${this.user.id}_limited_until`;
+			return `${this.userId}_limited_until`;
 		}
 
 		isLimited() {
@@ -315,11 +317,11 @@
 				if (this.limitTimer)
 					clearTimeout(this.limitTimer);
 				this.limitTimer = setTimeout(() => {
-					console.info(`${LOG_PREFIX}%cVoting rate limit refreshed for user %d`, 'color:deepskyblue', this.user.id);
+					console.info(`${LOG_PREFIX}%cVoting rate limit refreshed for user %d`, 'color:deepskyblue', this.userId);
 					this.enableElements();
 					this.limitTimer = null;
 				}, data.diff);
-				console.info(`${LOG_PREFIX}%cVoting rate limit for user %d will refresh in %f second(s)`, 'color:deepskyblue', this.user.id, data.diff / 1000);
+				console.info(`${LOG_PREFIX}%cVoting rate limit for user %d will refresh in %f second(s)`, 'color:deepskyblue', this.userId, data.diff / 1000);
 				this.disableElements(new Date(data.untilTs));
 			});
 		}
